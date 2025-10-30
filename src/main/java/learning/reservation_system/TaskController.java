@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -17,6 +18,8 @@ import org.springframework.web.servlet.function.EntityResponse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
@@ -40,7 +43,7 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    public Task getTaskById(@PathVariable Long id){
+    public ResponseEntity<Task> getTaskById(@PathVariable Long id){
         log.info("Task with id " + id + " was found");
         return taskService.getTaskById(id);
     }
