@@ -1,4 +1,4 @@
-package learning.reservation_system;
+package mytickets;
 
 public enum Priority {
     Low,

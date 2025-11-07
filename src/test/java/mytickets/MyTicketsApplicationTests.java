@@ -1,10 +1,10 @@
-package learning.reservation_system;
+package mytickets;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ReservationSystemApplicationTests {
+class MyTicketsApplicationTests {
 
 	@Test
 	void contextLoads() {

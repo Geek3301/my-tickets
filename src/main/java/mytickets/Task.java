@@ -1,4 +1,4 @@
-package learning.reservation_system;
+package mytickets;
 
 import java.time.LocalDateTime;
 

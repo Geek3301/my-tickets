@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>learning</groupId>
-	<artifactId>reservation-system</artifactId>
+	<artifactId>MyTickets</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>reservation-system</name>
 	<description>My first project for Spring Boot</description>
