@@ -3,6 +3,7 @@ package mytickets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,7 +36,7 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<Task> createTask(
+    public ResponseEntity<TaskEntity> createTask(
             @RequestBody Task newRequestBodyTask
     ){
         log.info("Task created");
@@ -43,7 +44,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(
+    public ResponseEntity<TaskEntity> updateTask(
             @RequestBody Task newRequestBodyTask,
             @PathVariable Long id
     ){
@@ -52,7 +53,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Task> deleteTask(
+    public ResponseEntity<TaskEntity> deleteTask(
             @PathVariable Long id
     ){
         log.info("Task deleted");
