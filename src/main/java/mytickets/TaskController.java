@@ -29,14 +29,14 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<TaskEntity> createTask(
+    public ResponseEntity<Task> createTask(
             @RequestBody Task newRequestBodyTask
     ){
         return this.taskService.createTask(newRequestBodyTask);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TaskEntity> updateTask(
+    public ResponseEntity<Task> updateTask(
             @RequestBody Task newRequestBodyTask,
             @PathVariable Long id
     ){
@@ -44,14 +44,14 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<TaskEntity> deleteTask(
+    public ResponseEntity<Task> deleteTask(
             @PathVariable Long id
     ){
         return this.taskService.deleteTask(id);
     }
 
     @PostMapping("/{id}/start")
-    public ResponseEntity<TaskEntity> startTask (
+    public ResponseEntity<Task> startTask (
             @PathVariable Long id
     ){
         return this.taskService.startTask(id);

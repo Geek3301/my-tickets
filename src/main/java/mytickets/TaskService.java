@@ -21,15 +21,15 @@ public class TaskService {
     public List<Task> getAllTasks() {
         List<TaskEntity> allTasks = taskRepository.findAll();
         log.info("Tasks were found");
-        return allTasks.stream().map(it -> new Task(          // stream is kinda foreach; it means $this; map(it -> new Task()) creates Task for each TaskEntity
-                it.getId(),                                             // allTasks.stream() - makes Stream<TaskEntity> from List<TaskEntity>
-                it.getCreatorId(),                                      // Stream<TaskEntity>.map(it -> new Task()) - makes Stream<Task>
-                it.getAssignedUserId(),                                 // Stream<Task>.toList() - makes List<Task>
-                it.getStatus(),
-                it.getCreateDateTime(),
-                it.getDeadlineDate(),
-                it.getPriority()
-        )).toList();
+        return allTasks.stream().map(this::mapToTask).toList();
+
+        // x -> { return x+2; } - lambda expression, where x is argument and { return x+2; } is body of the function so it's like function(x){ return x+2 }
+        // x -> x+2 - also lambda expression, where x is argument and x+2 is body of the function
+        // it -> mapToTask(it) - lambda expression, where it($this in java) is argument and mapToTask(it) is body of the function
+        // this:mapToTask just calls mapToTask(it) for every it($this)
+        // .map() - creates new list, where each element is transformed by lambda expression (it($this) was TaskEntity and became Task)
+        // .stream converts List<TaskEntity> to Stream<TaskEntity>, and .toList() converts transformed Stream<Task> to List<Task>
+
         /*      alternative way (does the same)
          *       List<Task> tasks = new ArrayList<>();
          *        for(TaskEntity taskEntity : allTasks){
@@ -70,7 +70,7 @@ public class TaskService {
         }
     }
 
-    public ResponseEntity<TaskEntity> createTask(Task newRequestBodyTask) {
+    public ResponseEntity<Task> createTask(Task newRequestBodyTask) {
         if(newRequestBodyTask.id() != null || newRequestBodyTask.status() != null){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -85,7 +85,7 @@ public class TaskService {
         log.info("Task created");
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(taskEntity);
+                .body(mapToTask(taskEntity));
     }
 
     public ResponseEntity<Status> approveUpdate(Task newRequestBodyTask, Long id){
@@ -109,7 +109,7 @@ public class TaskService {
         return ResponseEntity.status(HttpStatus.OK).body(status);
     }
 
-    public ResponseEntity<TaskEntity> updateTask(Long id, Task newRequestBodyTask) {
+    public ResponseEntity<Task> updateTask(Long id, Task newRequestBodyTask) {
         ResponseEntity<Status> answer = approveUpdate(newRequestBodyTask, id);
         if(answer.getStatusCode() != HttpStatus.OK){
             return ResponseEntity.status(answer.getStatusCode()).build();
@@ -127,11 +127,11 @@ public class TaskService {
                 log.info("Task updated");
                 return ResponseEntity
                         .status(HttpStatus.OK)
-                        .body(newTaskEntity);
+                        .body(mapToTask(newTaskEntity));
         }
     }
 
-    public ResponseEntity<TaskEntity> deleteTask(Long id) {
+    public ResponseEntity<Task> deleteTask(Long id) {
         Optional<TaskEntity> optionalTaskEntity = taskRepository.findById(id);
         if(optionalTaskEntity.isPresent()){
             TaskEntity taskEntity = optionalTaskEntity.get();
@@ -139,13 +139,13 @@ public class TaskService {
             log.info("Task deleted");
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(taskEntity);
+                    .body(mapToTask(taskEntity));
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
-    public ResponseEntity<TaskEntity> startTask(Long id) {
+    public ResponseEntity<Task> startTask(Long id) {
         Optional<TaskEntity> optionalTaskEntity = taskRepository.findById(id);
         if(optionalTaskEntity.isPresent()){
             TaskEntity taskEntity = optionalTaskEntity.get();
@@ -155,7 +155,7 @@ public class TaskService {
                     taskEntity.setStatus(Status.IN_PROGRESS);
                     taskRepository.save(taskEntity);
                     log.info("Task with id {} started", id);
-                    return ResponseEntity.status(HttpStatus.OK).body(taskEntity);
+                    return ResponseEntity.status(HttpStatus.OK).body(mapToTask(taskEntity));
                 } else {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
                 }
@@ -165,5 +165,17 @@ public class TaskService {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+    }
+
+    public Task mapToTask(TaskEntity taskEntity){
+        return new Task(
+                taskEntity.getId(),
+                taskEntity.getCreatorId(),
+                taskEntity.getAssignedUserId(),
+                taskEntity.getStatus(),
+                taskEntity.getCreateDateTime(),
+                taskEntity.getDeadlineDate(),
+                taskEntity.getPriority()
+        );
     }
 }
