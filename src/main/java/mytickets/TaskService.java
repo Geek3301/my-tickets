@@ -1,28 +1,52 @@
 package mytickets;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 
 public class TaskService {
-
-    private final Map<Long, Task> tasks;
-    private final AtomicLong taskIds;
+    private static final Logger log = LoggerFactory.getLogger(TaskService.class);
     private final TaskRepository taskRepository;
 
     public TaskService(TaskRepository taskRepository){
-        tasks = new HashMap<>();
-        taskIds = new AtomicLong(0L);
         this.taskRepository = taskRepository;
     }
 
+    public List<Task> getAllTasks() {
+        List<TaskEntity> allTasks = taskRepository.findAll();
+        log.info("Tasks were found");
+        return allTasks.stream().map(it -> new Task(          // stream is kinda foreach; it means $this; map(it -> new Task()) creates Task for each TaskEntity
+                it.getId(),                                             // allTasks.stream() - makes Stream<TaskEntity> from List<TaskEntity>
+                it.getCreatorId(),                                      // Stream<TaskEntity>.map(it -> new Task()) - makes Stream<Task>
+                it.getAssignedUserId(),                                 // Stream<Task>.toList() - makes List<Task>
+                it.getStatus(),
+                it.getCreateDateTime(),
+                it.getDeadlineDate(),
+                it.getPriority()
+        )).toList();
+        /*      alternative way (does the same)
+         *       List<Task> tasks = new ArrayList<>();
+         *        for(TaskEntity taskEntity : allTasks){
+         *            Task newTask = new Task(
+         *                    taskEntity.getId(),
+         *                    taskEntity.getCreatorId(),
+         *                    taskEntity.getAssignedUserId(),
+         *                    taskEntity.getStatus(),
+         *                    taskEntity.getCreateDateTime(),
+         *                    taskEntity.getDeadlineDate(),
+         *                    taskEntity.getPriority()
+         *            );
+         *            tasks.add(newTask);
+         *        }
+         *        return tasks;
+         */
+    }
 
     public ResponseEntity<Task> getTaskById(Long id)
     {
@@ -37,6 +61,7 @@ public class TaskService {
                     taskEntity.getCreateDateTime(),
                     taskEntity.getDeadlineDate(),
                     taskEntity.getPriority());
+            log.info("Task with id {} was found", id);
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(task);
@@ -44,36 +69,6 @@ public class TaskService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
-
-    public List<Task> getAllTasks() {
-        List<TaskEntity> allTasks = taskRepository.findAll();
-        return allTasks.stream().map(it -> new Task(          // stream is kinda foreach; it means $this; map(it -> new Task()) creates Task for each TaskEntity
-                it.getId(),                                             // allTasks.stream() - makes Stream<TaskEntity> from List<TaskEntity>
-                it.getCreatorId(),                                      // Stream<TaskEntity>.map(it -> new Task()) - makes Stream<Task>
-                it.getAssignedUserId(),                                 // Stream<Task>.toList() - makes List<Task>
-                it.getStatus(),
-                it.getCreateDateTime(),
-                it.getDeadlineDate(),
-                it.getPriority()
-        )).toList();
-/*      alternative way (does the same)
-*       List<Task> tasks = new ArrayList<>();
-*        for(TaskEntity taskEntity : allTasks){
-*            Task newTask = new Task(
-*                    taskEntity.getId(),
-*                    taskEntity.getCreatorId(),
-*                    taskEntity.getAssignedUserId(),
-*                    taskEntity.getStatus(),
-*                    taskEntity.getCreateDateTime(),
-*                    taskEntity.getDeadlineDate(),
-*                    taskEntity.getPriority()
-*            );
-*            tasks.add(newTask);
-*        }
-*        return tasks;
-*/
-    }
-
 
     public ResponseEntity<TaskEntity> createTask(Task newRequestBodyTask) {
         if(newRequestBodyTask.id() != null || newRequestBodyTask.status() != null){
@@ -87,6 +82,7 @@ public class TaskService {
                 newRequestBodyTask.deadlineDate(),
                 newRequestBodyTask.priority());
         taskRepository.save(taskEntity);
+        log.info("Task created");
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(taskEntity);
@@ -128,6 +124,7 @@ public class TaskService {
                 );
                 newTaskEntity.setId(id);
                 taskRepository.save(newTaskEntity);
+                log.info("Task updated");
                 return ResponseEntity
                         .status(HttpStatus.OK)
                         .body(newTaskEntity);
@@ -139,9 +136,32 @@ public class TaskService {
         if(optionalTaskEntity.isPresent()){
             TaskEntity taskEntity = optionalTaskEntity.get();
             taskRepository.delete(taskEntity);
+            log.info("Task deleted");
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(taskEntity);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    public ResponseEntity<TaskEntity> startTask(Long id) {
+        Optional<TaskEntity> optionalTaskEntity = taskRepository.findById(id);
+        if(optionalTaskEntity.isPresent()){
+            TaskEntity taskEntity = optionalTaskEntity.get();
+            if(taskEntity.getAssignedUserId() != null){
+                int amountOfActiveTasks = taskRepository.getTasksByAssignedUserId(taskEntity.getAssignedUserId(), Status.IN_PROGRESS).size();
+                if(amountOfActiveTasks < 5){
+                    taskEntity.setStatus(Status.IN_PROGRESS);
+                    taskRepository.save(taskEntity);
+                    log.info("Task with id {} started", id);
+                    return ResponseEntity.status(HttpStatus.OK).body(taskEntity);
+                } else {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
