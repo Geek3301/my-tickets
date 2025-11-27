@@ -1,5 +1,6 @@
 package mytickets;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -66,13 +67,13 @@ public class TaskService {
                     .status(HttpStatus.OK)
                     .body(task);
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            throw new EntityNotFoundException("Task with id " + id + " not found");
         }
     }
 
     public ResponseEntity<Task> createTask(Task newRequestBodyTask) {
         if(newRequestBodyTask.id() != null || newRequestBodyTask.status() != null){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            throw new IllegalArgumentException("Task id and status can't be set");
         }
         TaskEntity taskEntity = new TaskEntity(
                 newRequestBodyTask.creatorId(),
@@ -91,22 +92,20 @@ public class TaskService {
     public ResponseEntity<Status> approveUpdate(Task newRequestBodyTask, Long id){
         Optional<TaskEntity> optionalOldTaskEntity = taskRepository.findById(id);
         if(optionalOldTaskEntity.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            throw new EntityNotFoundException("Task with id " + id + " not found");
         }
         TaskEntity oldTaskEntity = optionalOldTaskEntity.get();
         if(newRequestBodyTask.id() != null){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            throw new IllegalArgumentException("Task id can't be changed");
         }
         if(oldTaskEntity.getStatus() == Status.DONE){
             if(newRequestBodyTask.status() == Status.DONE){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+                throw new IllegalStateException("Task is already done");
             } else if (newRequestBodyTask.status() == null) {
-                Status status = Status.IN_PROGRESS;
-                return ResponseEntity.status(HttpStatus.OK).body(status);
+                return ResponseEntity.status(HttpStatus.OK).body(Status.IN_PROGRESS);
             }
         }
-        Status status = newRequestBodyTask.status();
-        return ResponseEntity.status(HttpStatus.OK).body(status);
+        return ResponseEntity.status(HttpStatus.OK).body(newRequestBodyTask.status());
     }
 
     public ResponseEntity<Task> updateTask(Long id, Task newRequestBodyTask) {
@@ -141,7 +140,7 @@ public class TaskService {
                     .status(HttpStatus.OK)
                     .body(mapToTask(taskEntity));
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            throw new EntityNotFoundException("Task with id " + id + " not found");
         }
     }
 
@@ -154,7 +153,7 @@ public class TaskService {
             log.info("Task with id {} cancelled", id);
             return ResponseEntity.status(HttpStatus.OK).body(mapToTask(taskEntity));
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            throw new EntityNotFoundException("Task with id " + id + " not found");
         }
     }
 
@@ -170,13 +169,13 @@ public class TaskService {
                     log.info("Task with id {} started", id);
                     return ResponseEntity.status(HttpStatus.OK).body(mapToTask(taskEntity));
                 } else {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+                    throw new IllegalStateException("User has too many active tasks");
                 }
             } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+                throw new IllegalStateException("Task is not assigned to user");
             }
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            throw new EntityNotFoundException("Task with id " + id + " not found");
         }
     }
 
