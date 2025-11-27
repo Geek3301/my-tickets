@@ -8,33 +8,50 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.time.LocalDateTime;
+
 @ControllerAdvice
 public class TicketsExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(TicketsExceptionHandler.class);
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleException(
+    public ResponseEntity<ErrorDTO> handleException(
             Exception exception
     ) {
         log.error("exception; message: {}", exception.getMessage());
+        ErrorDTO error = new ErrorDTO(
+                "Internal Server Error",
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
         return ResponseEntity
                 .status(500)
-                .body(exception.getMessage());
+                .body(error);
     }
 
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
-    public ResponseEntity<String> handleBadRequest(
+    public ResponseEntity<ErrorDTO> handleBadRequest(
             Exception exception
     ) {
         log.error("request is wrong; message: {}", exception.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+        ErrorDTO error = new ErrorDTO(
+                "Bad Request",
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> handleNotFound(
+    public ResponseEntity<ErrorDTO> handleNotFound(
             Exception exception
     ) {
         log.error("entity not found; message: {}", exception.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+        ErrorDTO error = new ErrorDTO(
+                "Not Found",
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 }
