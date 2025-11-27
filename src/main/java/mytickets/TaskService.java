@@ -145,6 +145,19 @@ public class TaskService {
         }
     }
 
+    public ResponseEntity<Task> cancelTask(Long id) {
+        Optional<TaskEntity> optionalTaskEntity = taskRepository.findById(id);
+        if(optionalTaskEntity.isPresent()){
+            TaskEntity taskEntity = optionalTaskEntity.get();
+            taskEntity.setStatus(Status.CANCELLED);
+            taskRepository.save(taskEntity);
+            log.info("Task with id {} cancelled", id);
+            return ResponseEntity.status(HttpStatus.OK).body(mapToTask(taskEntity));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
     public ResponseEntity<Task> startTask(Long id) {
         Optional<TaskEntity> optionalTaskEntity = taskRepository.findById(id);
         if(optionalTaskEntity.isPresent()){

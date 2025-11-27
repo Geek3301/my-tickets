@@ -50,6 +50,14 @@ public class TaskController {
         return this.taskService.deleteTask(id);
     }
 
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Task> cancelTask (
+            @PathVariable Long id
+    ){
+        return this.taskService.cancelTask(id);
+    }
+
+
     @PostMapping("/{id}/start")
     public ResponseEntity<Task> startTask (
             @PathVariable Long id
