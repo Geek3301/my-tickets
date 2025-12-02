@@ -57,11 +57,17 @@ public class TaskController {
         return this.taskService.cancelTask(id);
     }
 
-
     @PostMapping("/{id}/start")
     public ResponseEntity<Task> startTask (
             @PathVariable Long id
     ){
         return this.taskService.startTask(id);
+    }
+
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<Task> completeTask(
+            @PathVariable Long id
+    ) {
+        return this.taskService.completeTask(id);
     }
 }

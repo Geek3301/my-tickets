@@ -16,27 +16,28 @@ import java.time.LocalDateTime;
 @Entity
 public class TaskEntity {
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "tasks_id")
     private Long id;
 
-    @Column(name = "tasks_creator_id")
+    @Column(name = "tasks_creator_id", nullable = false)
     private Long creatorId;
 
-    @Column(name = "tasks_assigned_user_id")
+    @Column(name = "tasks_assigned_user_id", nullable = false)
     private Long assignedUserId;
 
-    @Column(name = "tasks_status")
+    @Column(name = "tasks_status", nullable = false)
     private Status status;
 
-    @Column(name = "tasks_creation_date")
+    @Column(name = "tasks_creation_date", nullable = false)
     private LocalDateTime creationDate;
 
-    @Column(name = "tasks_deadline_date")
+    @Column(name = "tasks_deadline_date", nullable = false)
     private LocalDateTime deadlineDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tasks_priority")
+    @Column(name = "tasks_priority", nullable = false)
     private Priority priority;
 
     public TaskEntity() {

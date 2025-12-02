@@ -187,6 +187,22 @@ public class TaskService {
         }
     }
 
+    public ResponseEntity<Task> completeTask(Long id) {
+        Optional<TaskEntity> optionalTaskEntity = taskRepository.findById(id);
+        if(optionalTaskEntity.isPresent()){
+            TaskEntity taskEntity = optionalTaskEntity.get();
+            if(taskEntity.getStatus() == Status.DONE){
+                throw new IllegalStateException("Task is already done");
+            }
+            taskEntity.setStatus(Status.DONE);
+            taskRepository.save(taskEntity);
+            log.info("Task with id {} completed", id);
+            return ResponseEntity.status(HttpStatus.OK).body(mapToTask(taskEntity));
+        } else {
+            throw new EntityNotFoundException("Task with id " + id + " not found");
+        }
+    }
+
     public Task mapToTask(TaskEntity taskEntity){
         return new Task(
                 taskEntity.getId(),
