@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -29,14 +30,18 @@ public class TicketsExceptionHandler {
                 .body(error);
     }
 
-    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class, MethodArgumentNotValidException.class})
     public ResponseEntity<ErrorDTO> handleBadRequest(
             Exception exception
     ) {
-        log.error("request is wrong; message: {}", exception.getMessage());
+        String message = exception.getMessage();
+        if(exception instanceof MethodArgumentNotValidException){
+             message = exception.getMessage(); //TODO: extract message from exception
+        }
+        log.error("request is wrong; message: {}", message);
         ErrorDTO error = new ErrorDTO(
                 "Bad Request",
-                exception.getMessage(),
+                message,
                 LocalDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);

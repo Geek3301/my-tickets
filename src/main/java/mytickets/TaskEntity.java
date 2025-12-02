@@ -29,8 +29,8 @@ public class TaskEntity {
     @Column(name = "tasks_status")
     private Status status;
 
-    @Column(name = "tasks_create_date_time")
-    private LocalDateTime createDateTime;
+    @Column(name = "tasks_creation_date")
+    private LocalDateTime creationDate;
 
     @Column(name = "tasks_deadline_date")
     private LocalDateTime deadlineDate;
@@ -46,13 +46,13 @@ public class TaskEntity {
             Long creatorId,
             Long assignedUserId,
             Status status,
-            LocalDateTime createDateTime,
+            LocalDateTime creationDate,
             LocalDateTime deadlineDate,
             Priority priority
     ) {
         this.priority = priority;
         this.deadlineDate = deadlineDate;
-        this.createDateTime = createDateTime;
+        this.creationDate = creationDate;
         this.status = status;
         this.assignedUserId = assignedUserId;
         this.creatorId = creatorId;
@@ -90,12 +90,12 @@ public class TaskEntity {
         this.status = status;
     }
 
-    public LocalDateTime getCreateDateTime() {
-        return createDateTime;
+    public LocalDateTime getCreationDate() {
+        return creationDate;
     }
 
-    public void setCreateDateTime(LocalDateTime createDateTime) {
-        this.createDateTime = createDateTime;
+    public void setCreationDate(LocalDateTime creationDate) {
+        this.creationDate = creationDate;
     }
 
     public LocalDateTime getDeadlineDate() {

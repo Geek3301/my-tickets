@@ -59,7 +59,7 @@ public class TaskService {
                     taskEntity.getCreatorId(),
                     taskEntity.getAssignedUserId(),
                     taskEntity.getStatus(),
-                    taskEntity.getCreateDateTime(),
+                    taskEntity.getCreationDate(),
                     taskEntity.getDeadlineDate(),
                     taskEntity.getPriority());
             log.info("Task with id {} was found", id);
@@ -72,14 +72,17 @@ public class TaskService {
     }
 
     public ResponseEntity<Task> createTask(Task newRequestBodyTask) {
-        if(newRequestBodyTask.id() != null || newRequestBodyTask.status() != null){
-            throw new IllegalArgumentException("Task id and status can't be set");
+        if(newRequestBodyTask.status() != null){
+            throw new IllegalArgumentException("Task status can't be set");
+        }
+        if(newRequestBodyTask.deadlineDate().isBefore(newRequestBodyTask.creationDate())){
+            throw new IllegalArgumentException("Deadline date can't be before creation date");
         }
         TaskEntity taskEntity = new TaskEntity(
                 newRequestBodyTask.creatorId(),
                 newRequestBodyTask.assignedUserId(),
                 Status.CREATED,
-                newRequestBodyTask.createDateTime(),
+                newRequestBodyTask.creationDate(),
                 newRequestBodyTask.deadlineDate(),
                 newRequestBodyTask.priority());
         taskRepository.save(taskEntity);
@@ -95,15 +98,15 @@ public class TaskService {
             throw new EntityNotFoundException("Task with id " + id + " not found");
         }
         TaskEntity oldTaskEntity = optionalOldTaskEntity.get();
-        if(newRequestBodyTask.id() != null){
-            throw new IllegalArgumentException("Task id can't be changed");
-        }
         if(oldTaskEntity.getStatus() == Status.DONE){
             if(newRequestBodyTask.status() == Status.DONE){
                 throw new IllegalStateException("Task is already done");
             } else if (newRequestBodyTask.status() == null) {
                 return ResponseEntity.status(HttpStatus.OK).body(Status.IN_PROGRESS);
             }
+        }
+        if(newRequestBodyTask.deadlineDate().isBefore(newRequestBodyTask.creationDate())){
+            throw new IllegalArgumentException("Deadline date can't be before creation date");
         }
         return ResponseEntity.status(HttpStatus.OK).body(newRequestBodyTask.status());
     }
@@ -117,7 +120,7 @@ public class TaskService {
                         newRequestBodyTask.creatorId(),
                         newRequestBodyTask.assignedUserId(),
                         answer.getBody(),
-                        newRequestBodyTask.createDateTime(),
+                        newRequestBodyTask.creationDate(),
                         newRequestBodyTask.deadlineDate(),
                         newRequestBodyTask.priority()
                 );
@@ -148,6 +151,9 @@ public class TaskService {
         Optional<TaskEntity> optionalTaskEntity = taskRepository.findById(id);
         if(optionalTaskEntity.isPresent()){
             TaskEntity taskEntity = optionalTaskEntity.get();
+            if(taskEntity.getStatus() == Status.CANCELLED){
+                throw new IllegalStateException("Task is already cancelled");
+            }
             taskEntity.setStatus(Status.CANCELLED);
             taskRepository.save(taskEntity);
             log.info("Task with id {} cancelled", id);
@@ -161,9 +167,14 @@ public class TaskService {
         Optional<TaskEntity> optionalTaskEntity = taskRepository.findById(id);
         if(optionalTaskEntity.isPresent()){
             TaskEntity taskEntity = optionalTaskEntity.get();
-            if(taskEntity.getAssignedUserId() != null){
                 int amountOfActiveTasks = taskRepository.getTasksByAssignedUserId(taskEntity.getAssignedUserId(), Status.IN_PROGRESS).size();
                 if(amountOfActiveTasks < 5){
+                    if(taskEntity.getStatus() == Status.IN_PROGRESS){
+                        throw new IllegalStateException("Task with id is already in progress");
+                    }
+                    if (taskEntity.getStatus() == Status.DONE){
+                        throw new IllegalStateException("Can't cancel task that is already done");
+                    }
                     taskEntity.setStatus(Status.IN_PROGRESS);
                     taskRepository.save(taskEntity);
                     log.info("Task with id {} started", id);
@@ -171,9 +182,6 @@ public class TaskService {
                 } else {
                     throw new IllegalStateException("User has too many active tasks");
                 }
-            } else {
-                throw new IllegalStateException("Task is not assigned to user");
-            }
         } else {
             throw new EntityNotFoundException("Task with id " + id + " not found");
         }
@@ -185,7 +193,7 @@ public class TaskService {
                 taskEntity.getCreatorId(),
                 taskEntity.getAssignedUserId(),
                 taskEntity.getStatus(),
-                taskEntity.getCreateDateTime(),
+                taskEntity.getCreationDate(),
                 taskEntity.getDeadlineDate(),
                 taskEntity.getPriority()
         );
