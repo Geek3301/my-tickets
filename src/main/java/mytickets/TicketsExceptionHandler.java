@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class TicketsExceptionHandler {
@@ -35,8 +36,17 @@ public class TicketsExceptionHandler {
             Exception exception
     ) {
         String message = exception.getMessage();
-        if(exception instanceof MethodArgumentNotValidException){
-             message = exception.getMessage(); //TODO: extract message from exception
+        if(exception instanceof MethodArgumentNotValidException notValidException){
+            message = notValidException          // taking our notValidException object
+                    .getBindingResult()         // gives a BindingResult object that contains a lot of FieldError objects (1 for each wrong field)
+                    .getFieldErrors()          // we are unpacking the BindingResult object and saving all the FieldError objects to the List (so we get List<FieldError>)
+                    .stream()                 // we are converting the List<FieldError> to a Stream<FieldError> to make operations with it
+                    .map(error ->   // for each element of Stream<FieldError> create "error" which will contain FieldError itself
+                    {return error.getField() + ": " + error.getDefaultMessage();    //for each "error" return a String that looks like Field + ": " + DefaultMessage
+                    })                     // save each returned String to the new Stream<String>
+                    .collect(             // transforms Stream<String> to another data type (depends on Collector that given as an argument)
+                            Collectors.joining("; ")    // says that we want to build a big String out of all Strings in the Stream (using "; " as a separator)
+                    );                  // finally getting String with all FieldErrors
         }
         log.error("request is wrong; message: {}", message);
         ErrorDTO error = new ErrorDTO(
