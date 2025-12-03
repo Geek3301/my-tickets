@@ -140,8 +140,8 @@ public class TaskService {
             taskRepository.delete(taskEntity);
             log.info("Task deleted");
             return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(mapToTask(taskEntity));
+                    .status(HttpStatus.NO_CONTENT)
+                    .build();
         } else {
             throw new EntityNotFoundException("Task with id " + id + " not found");
         }
@@ -171,9 +171,6 @@ public class TaskService {
                 if(amountOfActiveTasks < 5){
                     if(taskEntity.getStatus() == Status.IN_PROGRESS){
                         throw new IllegalStateException("Task with id is already in progress");
-                    }
-                    if (taskEntity.getStatus() == Status.DONE){
-                        throw new IllegalStateException("Can't cancel task that is already done");
                     }
                     taskEntity.setStatus(Status.IN_PROGRESS);
                     taskRepository.save(taskEntity);
