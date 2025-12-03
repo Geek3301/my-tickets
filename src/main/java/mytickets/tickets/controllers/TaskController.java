@@ -1,5 +1,7 @@
-package mytickets;
+package mytickets.tickets.controllers;
 
+import mytickets.tickets.models.Task;
+import mytickets.tickets.services.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +21,7 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<Task> getAllTasks(){
+    public ResponseEntity<List<Task>> getAllTasks(){
         return taskService.getAllTasks();
     }
 

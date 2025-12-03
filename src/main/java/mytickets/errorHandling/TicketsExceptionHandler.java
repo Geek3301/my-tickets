@@ -1,4 +1,4 @@
-package mytickets;
+package mytickets.errorHandling;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;

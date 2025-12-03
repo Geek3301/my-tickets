@@ -1,4 +1,4 @@
-package mytickets;
+package mytickets.tickets.models;
 
 public enum Status {
     CREATED,

@@ -1,4 +1,4 @@
-package mytickets;
+package mytickets.errorHandling;
 
 /*
  * DTO stands for Data Transfer Object (object that used only to transfer data)

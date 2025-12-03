@@ -1,4 +1,4 @@
-package mytickets;
+package mytickets.tickets.models;
 
 import jakarta.persistence.Table;
 import jakarta.persistence.Entity;
@@ -44,6 +44,7 @@ public class TaskEntity {
     }
 
     public TaskEntity(
+            Long id,
             Long creatorId,
             Long assignedUserId,
             Status status,

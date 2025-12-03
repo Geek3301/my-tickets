@@ -1,10 +1,10 @@
-package mytickets;
+package mytickets.tickets.models;
 
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.FutureOrPresent;
+
 import java.time.LocalDateTime;
-import java.time.chrono.ChronoLocalDateTime;
 
 public record Task(
         @Null
