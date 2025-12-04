@@ -1,5 +1,7 @@
 package mytickets.tickets.controllers;
 
+import mytickets.tickets.models.Priority;
+import mytickets.tickets.models.Status;
 import mytickets.tickets.models.Task;
 import mytickets.tickets.services.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +23,23 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Task>> getAllTasks(){
-        return taskService.getAllTasks();
+    public ResponseEntity<List<Task>> getTasks(
+            @RequestParam(required = false) Long assignedUserId,
+            @RequestParam(required = false) Long creatorId,
+            @RequestParam(required = false) Status status,
+            @RequestParam(required = false) Priority priority,
+            @RequestParam(required = false) Integer pageSize,
+            @RequestParam(required = false) Integer pageNumber
+    ){
+            FilterDTO filter = new FilterDTO(
+                    assignedUserId,
+                    creatorId,
+                    status,
+                    priority,
+                    pageSize,
+                    pageNumber
+            );
+            return taskService.getTasks(filter);
     }
 
     @GetMapping("/{id}")

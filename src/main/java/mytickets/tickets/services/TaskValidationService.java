@@ -3,8 +3,8 @@ package mytickets.tickets.services;
 import jakarta.persistence.EntityNotFoundException;
 import mytickets.tickets.dbConnection.TaskRepository;
 import mytickets.tickets.models.Status;
-import mytickets.tickets.models.Task;
 import mytickets.tickets.models.TaskEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -12,12 +12,20 @@ import java.time.LocalDateTime;
 @Service
 public class TaskValidationService {
 
+    private final Integer defaultPageSize;
+    private final Integer defaultPageNumber;
     private final TaskRepository taskRepository;
 
     public TaskValidationService(
-            TaskRepository taskRepository
+            TaskRepository taskRepository,
+            @Value("${default.page.size}")
+            Integer defaultPageSize,
+            @Value("${default.page.number}")
+            Integer defaultPageNumber
     ){
         this.taskRepository = taskRepository;
+        this.defaultPageSize = defaultPageSize;
+        this.defaultPageNumber = defaultPageNumber;
     }
 
     public TaskEntity getTaskEntityByIdIfExists(Long id){
@@ -42,6 +50,20 @@ public class TaskValidationService {
         if(deletedRows == 0){
             throw new EntityNotFoundException("Task not found");
         }
+    }
+
+    public Integer validatePageSize(Integer pageSize){
+        if(pageSize == null){
+            return defaultPageSize;
+        }
+        return pageSize;
+    }
+
+    public Integer validatePageNumber(Integer pageNumber){
+        if(pageNumber == null){
+            return defaultPageNumber;
+        }
+        return pageNumber;
     }
 
     public void validateStatusNotSet(Status status){
