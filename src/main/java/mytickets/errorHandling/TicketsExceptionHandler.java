@@ -26,9 +26,7 @@ public class TicketsExceptionHandler {
                 exception.getMessage(),
                 LocalDateTime.now()
         );
-        return ResponseEntity
-                .status(500)
-                .body(error);
+        return ResponseEntity.internalServerError().body(error);
     }
 
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class, MethodArgumentNotValidException.class})
@@ -54,7 +52,7 @@ public class TicketsExceptionHandler {
                 message,
                 LocalDateTime.now()
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)

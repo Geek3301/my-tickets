@@ -52,24 +52,37 @@ public class TaskController {
         return this.taskService.deleteTask(id);
     }
 
-    @PostMapping("/{id}/cancel")
+    @PostMapping({
+            "/{id}/cancel",
+            "/{id}/cancel/{responseType}",
+    })
     public ResponseEntity<Task> cancelTask (
-            @PathVariable Long id
+            @PathVariable Long id,
+            @PathVariable(required = false) String responseType
     ){
-        return this.taskService.cancelTask(id);
+        return this.taskService.cancelTask(id, responseType);
     }
 
-    @PostMapping("/{id}/start")
+    @PostMapping({
+            "/{id}/start",
+            "/{id}/start/{responseType}",
+    })
     public ResponseEntity<Task> startTask (
-            @PathVariable Long id
+            @PathVariable Long id,
+            @PathVariable(required = false) String responseType
     ){
-        return this.taskService.startTask(id);
+        return this.taskService.startTask(id, responseType);
     }
 
-    @PostMapping("/{id}/complete")
+    @PostMapping({
+            "/{id}/complete",
+            "/{id}/complete/{responseType}"
+    })
     public ResponseEntity<Task> completeTask(
-            @PathVariable Long id
+            @PathVariable Long id,
+            @PathVariable(required = false) String responseType
     ) {
-        return this.taskService.completeTask(id);
+        return this.taskService.completeTask(id, responseType);
     }
+
 }

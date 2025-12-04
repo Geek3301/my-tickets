@@ -81,8 +81,8 @@ public class TaskService {
     }
 
     public ResponseEntity<Task> createTask(Task newRequestBodyTask) {
-        taskValidationService.validateStatusNotSet(newRequestBodyTask);
-        taskValidationService.validateDatesOrder(newRequestBodyTask);
+        taskValidationService.validateStatusNotSet(newRequestBodyTask.status());
+        taskValidationService.validateDatesOrder(newRequestBodyTask.creationDate(), newRequestBodyTask.deadlineDate());
         TaskEntity taskEntity = taskToTaskEntityMapper.map(newRequestBodyTask);
         taskEntity.setStatus(Status.CREATED);
         taskRepository.save(taskEntity);
@@ -93,9 +93,10 @@ public class TaskService {
     }
 
     public ResponseEntity<Task> updateTask(Long id, Task newRequestBodyTask) {
-        taskValidationService.validateDatesOrder(newRequestBodyTask);
-        TaskEntity oldTaskEntity = taskValidationService.getTaskEntityByIdIfExists(id);
-        Status status = taskValidationService.defineNewUpdateStatus(oldTaskEntity, newRequestBodyTask);
+        taskValidationService.validateDatesOrder(newRequestBodyTask.creationDate(), newRequestBodyTask.deadlineDate());
+        Status oldStatus = taskRepository.getStatusById(id);
+        taskValidationService.validateStatusNotNull(oldStatus);
+        Status status = taskValidationService.defineNewUpdateStatus(oldStatus, newRequestBodyTask.status());
         TaskEntity newTaskEntity = taskToTaskEntityMapper.map(newRequestBodyTask);
         newTaskEntity.setStatus(status);
         newTaskEntity.setId(id);
@@ -105,37 +106,66 @@ public class TaskService {
     }
 
     public ResponseEntity<Task> deleteTask(Long id) {
-        TaskEntity taskEntity = taskValidationService.getTaskEntityByIdIfExists(id);
-        taskRepository.delete(taskEntity);
-        log.info("Task deleted");
+        int deletedRows = taskRepository.deleteTaskById(id);
+        taskValidationService.validateDeletion(deletedRows);
+        log.info("Task with id {} was deleted", id);
         return ResponseEntity.noContent().build();
     }
 
-    public ResponseEntity<Task> cancelTask(Long id) {
-        TaskEntity taskEntity = taskValidationService.getTaskEntityByIdIfExists(id);
-        taskValidationService.validateStatusNotCancelled(taskEntity);
-        taskEntity.setStatus(Status.CANCELLED);
-        taskRepository.save(taskEntity);
-        log.info("Task with id {} cancelled", id);
-        return ResponseEntity.ok(taskEntityToTaskMapper.map(taskEntity));
+    public ResponseEntity<Task> cancelTask(Long id, String responseType) {
+        if("task".equals(responseType)) {
+            TaskEntity taskEntity = taskValidationService.getTaskEntityByIdIfExists(id);
+            taskValidationService.validateStatusNotCancelled(taskEntity.getStatus());
+            taskEntity.setStatus(Status.CANCELLED);
+            taskRepository.save(taskEntity);
+            log.info("Task with id {} cancelled, task returned", id);
+            return ResponseEntity.ok(taskEntityToTaskMapper.map(taskEntity));
+        } else {
+            Status status = taskRepository.getStatusById(id);
+            taskValidationService.validateStatusNotNull(status);
+            taskValidationService.validateStatusNotCancelled(status);
+            taskRepository.updateTaskStatusById(id, Status.CANCELLED);
+            log.info("Task with id {} cancelled", id);
+            return ResponseEntity.ok().build();
+        }
     }
 
-    public ResponseEntity<Task> startTask(Long id) {
-        TaskEntity taskEntity = taskValidationService.getTaskEntityByIdIfExists(id);
-        taskValidationService.validateAmountOfActiveTasks(taskEntity);
-        taskValidationService.validateStatusNotInProgress(taskEntity);
-        taskEntity.setStatus(Status.IN_PROGRESS);
-        taskRepository.save(taskEntity);
-        log.info("Task with id {} started", id);
-        return ResponseEntity.ok(taskEntityToTaskMapper.map(taskEntity));
+    public ResponseEntity<Task> startTask(Long id, String responseType) {
+        if("task".equals(responseType)) {
+            TaskEntity taskEntity = taskValidationService.getTaskEntityByIdIfExists(id);
+            taskValidationService.validateAmountOfActiveTasks(taskEntity.getAssignedUserId());
+            taskValidationService.validateStatusNotInProgress(taskEntity.getStatus());
+            taskEntity.setStatus(Status.IN_PROGRESS);
+            taskRepository.updateTaskStatusById(id, Status.IN_PROGRESS);
+            log.info("Task with id {} started, task returned", id);
+            return ResponseEntity.ok(taskEntityToTaskMapper.map(taskEntity));
+        } else {
+            Long assignedUserId = taskRepository.getAssignedUserIdById(id);
+            Status status = taskRepository.getStatusById(id);
+            taskValidationService.validateStatusNotNull(status);
+            taskValidationService.validateAmountOfActiveTasks(assignedUserId);
+            taskValidationService.validateStatusNotInProgress(status);
+            taskRepository.updateTaskStatusById(id, Status.IN_PROGRESS);
+            log.info("Task with id {} started", id);
+            return ResponseEntity.ok().build();
+        }
     }
 
-    public ResponseEntity<Task> completeTask(Long id) {
-        TaskEntity taskEntity = taskValidationService.getTaskEntityByIdIfExists(id);
-        taskValidationService.validateStatusNotDone(taskEntity);
-        taskEntity.setStatus(Status.DONE);
-        taskRepository.save(taskEntity);
-        log.info("Task with id {} completed", id);
-        return ResponseEntity.ok(taskEntityToTaskMapper.map(taskEntity));
+    public ResponseEntity<Task> completeTask(Long id, String responseType) {
+        if("task".equals(responseType)) {
+            TaskEntity taskEntity = taskValidationService.getTaskEntityByIdIfExists(id);
+            taskValidationService.validateStatusNotDone(taskEntity.getStatus());
+            taskEntity.setStatus(Status.DONE);
+            taskRepository.updateTaskStatusById(id, Status.DONE);
+            log.info("Task with id {} completed, task returned", id);
+            return ResponseEntity.ok(taskEntityToTaskMapper.map(taskEntity));
+        } else {
+            Status status = taskRepository.getStatusById(id);
+            taskValidationService.validateStatusNotNull(status);
+            taskValidationService.validateStatusNotDone(status);
+            taskRepository.updateTaskStatusById(id, Status.DONE);
+            log.info("Task with id {} completed", id);
+            return ResponseEntity.ok().build();
+        }
     }
 }

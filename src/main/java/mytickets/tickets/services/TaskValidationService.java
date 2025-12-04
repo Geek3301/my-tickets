@@ -7,6 +7,8 @@ import mytickets.tickets.models.Task;
 import mytickets.tickets.models.TaskEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class TaskValidationService {
 
@@ -23,52 +25,64 @@ public class TaskValidationService {
                 .orElseThrow(() -> new EntityNotFoundException("Task with id " + id + " not found"));
     }
 
-    public void validateAmountOfActiveTasks(TaskEntity taskEntity){
-        Long amountOfActiveTasks = taskRepository.getAmountOfTasksByAssignedUserIdAndStatus(taskEntity.getAssignedUserId(), Status.IN_PROGRESS);
+    public void validateAmountOfActiveTasks(Long assignedUserId){
+        Long amountOfActiveTasks = taskRepository.getAmountOfTasksByAssignedUserIdAndStatus(assignedUserId, Status.IN_PROGRESS);
         if(amountOfActiveTasks > 4){
             throw new IllegalStateException("User has too many active tasks");
         }
     }
 
-    public void validateDatesOrder(Task newRequestBodyTask){
-        if(newRequestBodyTask.deadlineDate().isBefore(newRequestBodyTask.creationDate())){
+    public void validateDatesOrder(LocalDateTime creationTime, LocalDateTime deadlineTime){
+        if(deadlineTime.isBefore(creationTime)){
             throw new IllegalArgumentException("Deadline date can't be before creation date");
         }
     }
 
-    public void validateStatusNotSet(Task newRequestBodyTask){
-        if(newRequestBodyTask.status() != null){
+    public void validateDeletion(int deletedRows) {
+        if(deletedRows == 0){
+            throw new EntityNotFoundException("Task not found");
+        }
+    }
+
+    public void validateStatusNotSet(Status status){
+        if(status != null){
             throw new IllegalArgumentException("Task status can't be set");
         }
     }
 
-    public void validateStatusNotCancelled(TaskEntity taskEntity){
-        if(taskEntity.getStatus() == Status.CANCELLED){
-            throw new IllegalStateException("Task with id " + taskEntity.getId() + " is already cancelled");
+    public void validateStatusNotCancelled(Status status){
+        if(status == Status.CANCELLED){
+            throw new IllegalStateException("Task is already cancelled");
         }
     }
 
-    public void validateStatusNotInProgress(TaskEntity taskEntity){
-        if(taskEntity.getStatus() == Status.IN_PROGRESS){
-            throw new IllegalStateException("Task with id " + taskEntity.getId() + " is already in progress");
+    public void validateStatusNotInProgress(Status status){
+        if(status == Status.IN_PROGRESS){
+            throw new IllegalStateException("Task is already in progress");
         }
     }
 
-    public void validateStatusNotDone(TaskEntity taskEntity){
-        if(taskEntity.getStatus() == Status.DONE){
-            throw new IllegalStateException("Task with id " + taskEntity.getId() + " is already done");
+    public void validateStatusNotDone(Status status){
+        if(status == Status.DONE){
+            throw new IllegalStateException("Task is already done");
         }
     }
 
-    public Status defineNewUpdateStatus(TaskEntity oldTaskEntity, Task newRequestBodyTask){
-        if(oldTaskEntity.getStatus() == Status.DONE){
-            if(newRequestBodyTask.status() == Status.DONE){
-                throw new IllegalStateException("Task with id " + oldTaskEntity.getId() + " is already done");
-            } else if (newRequestBodyTask.status() == null) {
+    public void validateStatusNotNull(Status status){
+        if(status == null){
+            throw new EntityNotFoundException("Task not found");
+        }
+    }
+
+    public Status defineNewUpdateStatus(Status oldStatus, Status newStatus){
+        if(oldStatus == Status.DONE){
+            if(newStatus == Status.DONE){
+                throw new IllegalStateException("Task with id " + oldStatus + " is already done");
+            } else if (newStatus == null) {
                 return Status.IN_PROGRESS;
             }
         }
-        return newRequestBodyTask.status();
+        return newStatus;
     }
 
 }
